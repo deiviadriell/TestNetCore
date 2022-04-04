@@ -51,6 +51,17 @@ namespace WebApplication3.Controllers
             return cuenta;
         }
 
+        // GET: api/Cuentas/5
+        [HttpGet("cliente/{idCliente}")]
+        public async Task<ActionResult<IEnumerable<CuentasClientes>>> GetCuentaPorIdCliente(int idCliente)
+        {
+            var cuenta = await _context.Cuenta.Where(x=> x.idCliente == idCliente).Select(x=> new CuentasClientes { 
+                idCuenta = x.idCuenta,
+                numero = x.numero,           
+            }).ToListAsync();
+            return cuenta;
+        }
+
         // PUT: api/Cuentas/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]

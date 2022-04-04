@@ -42,6 +42,45 @@ namespace WebApplication3.Controllers
             return movimientos;
         }
 
+        // GET: api/Movimientos/5
+        [HttpGet("MovimientosCliente/{idCliente}")]
+        public async Task<ActionResult<IEnumerable<MovimientosCuenta>>> GetMovimientosClientes(int idCliente)
+        {
+            var movimientos = await _context.Movimientos.Where(x => x.Cuenta.Cliente.clienteid == idCliente).Select(x => new MovimientosCuenta
+            {
+                fecha = x.fecha,
+                cliente = x.Cuenta.Cliente.nombres,
+                numeroCuenta = x.Cuenta.numero,
+                tipoCuenta = x.Cuenta.TipoCuenta.tipoCuenta,
+                saldoInicial = x.Cuenta.saldoInicial,
+                tipoMovimiento = x.TipoMovimiento.tipoMovimiento,
+                estado = x.Cuenta.estado,
+                movimiento = x.valor,
+                saldoDisponible = x.saldo,
+
+            }).ToListAsync();            
+
+            return movimientos;
+        }
+
+        // GET: api/Movimientos/5
+        [HttpGet("UltimosMovimientos/")]
+        public async Task<ActionResult<IEnumerable<MovimientosCuenta>>> GetMovimientosUltimos()
+        {
+            var movimientos = await _context.Movimientos.Select(x => new MovimientosCuenta
+            {   
+                numeroCuenta = x.Cuenta.numero,
+                tipoCuenta = x.Cuenta.TipoCuenta.tipoCuenta,
+                saldoInicial = x.Cuenta.saldoInicial,
+                tipoMovimiento = x.TipoMovimiento.tipoMovimiento,
+                estado = x.Cuenta.estado,
+                movimiento = x.valor,                
+
+            }).ToListAsync();
+
+            return movimientos;
+        }
+
         // PUT: api/Movimientos/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
@@ -77,13 +116,18 @@ namespace WebApplication3.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Movimientos>> PostMovimientos(Movimientos movimientos)
-        {            
+        {
+            var saldos = _context.Movimientos.Where(x => x.Cuenta.idCuenta == movimientos.idCuenta).Select(x => x.saldo).ToList();
+            decimal saldo = 0;
+            if(saldos.Count>0)
+                saldo= Convert.ToDecimal(saldos.Last());
             
-            if(movimientos.TipoMovimiento.idTipoMovimiento == 2)
+                
+               
+            if(movimientos.idTipoMovimiento == 2 )
             {
                 //verifico el saldo disponible
-                var saldo = _context.Movimientos.Where(x => x.Cuenta.idCuenta == movimientos.idCuenta).Select(x => x.saldo).LastOrDefault();
-                if(saldo ==0 || saldo < movimientos.valor)
+                 if(saldo ==0 || saldo < movimientos.valor)
                 {
                     return BadRequest("Saldo no disponible");
                 }
@@ -96,6 +140,10 @@ namespace WebApplication3.Controllers
                     return BadRequest("Cupo excedido diario");
                 }
             }
+
+            movimientos.fecha = DateTime.Now;
+            movimientos.saldo = saldo - movimientos.valor;
+
            
             _context.Movimientos.Add(movimientos);
             await _context.SaveChangesAsync();

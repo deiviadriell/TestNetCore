@@ -19,9 +19,8 @@ namespace WebApplication3.Models
         public string direccion { get; set; }
         public string telefono { get; set; }
         public string clave { get; set; }
-        public bool estado { get; set; }
-       
-       
+        [Required] [MaxLength(100)]
+        public bool estado { get; set; }       
         public ICollection<Cuenta> Cuentas { get; set; }
 
         
